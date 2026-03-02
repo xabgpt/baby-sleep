@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a1a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Baby Sleep Sounds</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a1a;
+    color: #b8b0c8;
+    min-height: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 24px 16px 12px;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e8dff0;
+    letter-spacing: 0.5px;
+  }
+  header h1 span { font-size: 1.3rem; }
+  header p {
+    font-size: 0.85rem;
+    color: #6a6280;
+    margin-top: 4px;
+  }
+
+  /* Tab Nav */
+  .tabs {
+    display: flex;
+    margin: 0 16px 16px;
+    background: #141428;
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #6a6280;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-btn.active {
+    background: #1e1e3a;
+    color: #d4c8e8;
+  }
+
+  /* Pages */
+  .page { display: none; padding: 0 16px 120px; }
+  .page.active { display: block; }
+
+  /* Sound Grid */
+  .sound-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .sound-card {
+    background: #141428;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 24px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sound-card.playing {
+    border-color: #7c5cbf;
+    background: #1a1a38;
+    box-shadow: 0 0 20px rgba(124,92,191,0.15);
+  }
+  .sound-icon {
+    font-size: 2.4rem;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .sound-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #9a90b0;
+  }
+  .sound-card.playing .sound-label { color: #c8b8e8; }
+
+  /* Controls */
+  .controls {
+    background: #141428;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .control-row:last-child { margin-bottom: 0; }
+  .control-label {
+    font-size: 0.85rem;
+    color: #6a6280;
+    min-width: 56px;
+    flex-shrink: 0;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #252545;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #7c5cbf;
+    cursor: pointer;
+  }
+  .timer-options {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+  .timer-btn {
+    padding: 8px 14px;
+    border: 1.5px solid #252545;
+    border-radius: 8px;
+    background: transparent;
+    color: #8a80a0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .timer-btn.active {
+    border-color: #7c5cbf;
+    color: #c8b8e8;
+    background: rgba(124,92,191,0.15);
+  }
+
+  /* Timer display */
+  .timer-display {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.9rem;
+    color: #6a6280;
+    min-height: 2.5em;
+  }
+  .timer-display.running { color: #9a80c0; }
+
+  /* Now playing */
+  .now-playing {
+    text-align: center;
+    padding: 12px;
+    font-size: 0.9rem;
+    color: #6a6280;
+    min-height: 2.5em;
+  }
+  .now-playing.active { color: #9a80c0; }
+
+  /* Tips Page */
+  .tip-card {
+    background: #141428;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .tip-card h3 {
+    font-size: 1rem;
+    color: #d4c8e8;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tip-card h3 span { font-size: 1.2rem; }
+  .tip-card p, .tip-card li {
+    font-size: 0.88rem;
+    color: #8a80a0;
+    line-height: 1.6;
+  }
+  .tip-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .tip-card li {
+    padding: 4px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+  .tip-card li::before {
+    content: '•';
+    position: absolute;
+    left: 6px;
+    color: #7c5cbf;
+  }
+  .tip-highlight {
+    display: inline-block;
+    background: rgba(124,92,191,0.15);
+    color: #c8b8e8;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  /* Age banner */
+  .age-banner {
+    background: linear-gradient(135deg, #1a1a38, #1e1230);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    text-align: center;
+    border: 1px solid #2a2048;
+  }
+  .age-banner h2 {
+    font-size: 1.1rem;
+    color: #d4c8e8;
+    margin-bottom: 4px;
+  }
+  .age-banner p {
+    font-size: 0.85rem;
+    color: #7a70a0;
+  }
+
+  /* Schedule grid */
+  .schedule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .schedule-item {
+    background: rgba(124,92,191,0.08);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .schedule-item .val {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #c8b8e8;
+  }
+  .schedule-item .lbl {
+    font-size: 0.75rem;
+    color: #7a70a0;
+    margin-top: 2px;
+  }
+
+  /* Safe sleep banner */
+  .safe-sleep {
+    background: rgba(220, 80, 80, 0.08);
+    border: 1px solid rgba(220, 80, 80, 0.2);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .safe-sleep h3 {
+    color: #e0a0a0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .safe-sleep li { color: #b09090; }
+  .safe-sleep li::before { color: #d08080; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>🌙</span> Baby Sleep Sounds</h1>
+  <p>Peaceful sounds for your little one</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="sounds">Sounds</button>
+  <button class="tab-btn" data-tab="tips">Sleep Tips</button>
+</div>
+
+<!-- SOUNDS PAGE -->
+<div id="sounds" class="page active">
+  <div class="sound-grid">
+    <div class="sound-card" data-sound="white">
+      <span class="sound-icon">☁️</span>
+      <span class="sound-label">White Noise</span>
+    </div>
+    <div class="sound-card" data-sound="pink">
+      <span class="sound-icon">🌸</span>
+      <span class="sound-label">Pink Noise</span>
+    </div>
+    <div class="sound-card" data-sound="rain">
+      <span class="sound-icon">🌧️</span>
+      <span class="sound-label">Rain</span>
+    </div>
+    <div class="sound-card" data-sound="heartbeat">
+      <span class="sound-icon">💜</span>
+      <span class="sound-label">Heartbeat</span>
+    </div>
+    <div class="sound-card" data-sound="shush">
+      <span class="sound-icon">🤫</span>
+      <span class="sound-label">Shushing</span>
+    </div>
+    <div class="sound-card" data-sound="ocean">
+      <span class="sound-icon">🌊</span>
+      <span class="sound-label">Ocean Waves</span>
+    </div>
+  </div>
+
+  <div id="nowPlaying" class="now-playing">Tap a sound to play</div>
+
+  <div class="controls">
+    <div class="control-row">
+      <span class="control-label">Volume</span>
+      <input type="range" id="volume" min="0" max="100" value="60">
+    </div>
+    <div class="control-row">
+      <span class="control-label">Timer</span>
+      <div class="timer-options">
+        <button class="timer-btn active" data-mins="0">∞</button>
+        <button class="timer-btn" data-mins="15">15m</button>
+        <button class="timer-btn" data-mins="30">30m</button>
+        <button class="timer-btn" data-mins="45">45m</button>
+        <button class="timer-btn" data-mins="60">60m</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="timerDisplay" class="timer-display"></div>
+</div>
+
+<!-- TIPS PAGE -->
+<div id="tips" class="page">
+  <div class="age-banner">
+    <h2>👶 Your Baby at 5 Weeks</h2>
+    <p>Here's what to expect for sleep</p>
+    <div class="schedule-grid">
+      <div class="schedule-item">
+        <div class="val">14–17h</div>
+        <div class="lbl">Total Daily Sleep</div>
+      </div>
+      <div class="schedule-item">
+        <div class="val">45–60m</div>
+        <div class="lbl">Wake Window</div>
+      </div>
+      <div class="schedule-item">
+        <div class="val">4–6</div>
+        <div class="lbl">Naps Per Day</div>
+      </div>
+      <div class="schedule-item">
+        <div class="val">2–4h</div>
+        <div class="lbl">Night Stretch</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <h3><span>👀</span> Sleepy Cues to Watch</h3>
+    <ul>
+      <li>Yawning or stretching</li>
+      <li>Rubbing eyes or ears</li>
+      <li>Looking away or zoning out</li>
+      <li>Getting fussy or clingy</li>
+      <li>Clenching fists</li>
+    </ul>
+    <p style="margin-top: 8px; font-size: 0.8rem; color: #7a70a0;">
+      Tip: Start your wind-down routine at the <em>first</em> sign — don't wait until baby is overtired.
+    </p>
+  </div>
+
+  <div class="tip-card">
+    <h3><span>🕐</span> Wake Windows</h3>
+    <p>At 5 weeks, your baby can only handle about <span class="tip-highlight">45–60 minutes</span> of awake time before needing to sleep again. This includes feeding time!</p>
+    <p style="margin-top: 8px;">A rough cycle looks like:</p>
+    <ul>
+      <li>Wake up → Feed (15–30 min)</li>
+      <li>Brief awake time (15–30 min)</li>
+      <li>Show sleepy cues → Start soothing</li>
+      <li>Sleep (30 min – 2 hours)</li>
+      <li>Repeat!</li>
+    </ul>
+  </div>
+
+  <div class="tip-card">
+    <h3><span>🌙</span> Night vs Day</h3>
+    <ul>
+      <li>During the day: keep lights on, normal noise, interact</li>
+      <li>At night: dim lights, quiet voices, minimal stimulation</li>
+      <li>Night feeds: keep it boring — low light, no talking, no eye contact</li>
+      <li>This helps baby learn day from night (it takes time!)</li>
+    </ul>
+  </div>
+
+  <div class="tip-card">
+    <h3><span>💤</span> Soothing Techniques</h3>
+    <ul>
+      <li><strong>The 5 S's:</strong> Swaddle, Side/Stomach hold, Shush, Swing, Suck</li>
+      <li>White noise or shushing mimics the womb</li>
+      <li>Rhythmic motion (rocking, bouncing, car ride)</li>
+      <li>Skin-to-skin contact is deeply calming</li>
+      <li>A warm bath before bedtime can help</li>
+    </ul>
+  </div>
+
+  <div class="safe-sleep">
+    <h3><span>🛡️</span> Safe Sleep Reminders</h3>
+    <ul>
+      <li>Always place baby on their <strong>back</strong> to sleep</li>
+      <li>Use a <strong>firm, flat</strong> sleep surface</li>
+      <li>Keep the crib <strong>bare</strong> — no pillows, blankets, bumpers, or toys</li>
+      <li>Room-share (not bed-share) for the first 6 months</li>
+      <li>Keep the room comfortably cool (68–72°F / 20–22°C)</li>
+      <li>Offer a pacifier at sleep time (if breastfeeding is established)</li>
+    </ul>
+  </div>
+
+  <div class="tip-card">
+    <h3><span>💛</span> Remember</h3>
+    <p>At 5 weeks, there is <strong>no schedule</strong> — and that's completely normal. Your baby is still adjusting to the world. Follow their cues, not the clock. It gets easier!</p>
+  </div>
+</div>
+
+<script>
+// ===================== TABS =====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ===================== AUDIO ENGINE =====================
+let audioCtx = null;
+let masterGain = null;
+let currentSound = null;
+let currentNodes = [];
+let wakeLock = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.6;
+  masterGain.connect(audioCtx.destination);
+}
+
+function resumeAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// Generate noise buffer
+function createNoiseBuffer(duration) {
+  const len = audioCtx.sampleRate * duration;
+  const buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  return buffer;
+}
+
+// ---- SOUND GENERATORS ----
+
+function playWhiteNoise() {
+  const buffer = createNoiseBuffer(4);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.5;
+  source.connect(gain);
+  gain.connect(masterGain);
+  source.start();
+  return { nodes: [source, gain], stop: () => { source.stop(); source.disconnect(); gain.disconnect(); } };
+}
+
+function playPinkNoise() {
+  const bufferSize = 4 * audioCtx.sampleRate;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
+  for (let i = 0; i < bufferSize; i++) {
+    const white = Math.random() * 2 - 1;
+    b0 = 0.99886*b0 + white*0.0555179;
+    b1 = 0.99332*b1 + white*0.0750759;
+    b2 = 0.96900*b2 + white*0.1538520;
+    b3 = 0.86650*b3 + white*0.3104856;
+    b4 = 0.55000*b4 + white*0.5329522;
+    b5 = -0.7616*b5 - white*0.0168980;
+    data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white*0.5362) * 0.08;
+    b6 = white * 0.115926;
+  }
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.7;
+  source.connect(gain);
+  gain.connect(masterGain);
+  source.start();
+  return { nodes: [source, gain], stop: () => { source.stop(); source.disconnect(); gain.disconnect(); } };
+}
+
+function playRain() {
+  // Filtered noise with slow volume modulation
+  const buffer = createNoiseBuffer(4);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const bpf = audioCtx.createBiquadFilter();
+  bpf.type = 'bandpass';
+  bpf.frequency.value = 3000;
+  bpf.Q.value = 0.5;
+  // Slow modulation for "patter" effect
+  const lfo = audioCtx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.value = 0.3;
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.value = 0.15;
+  lfo.connect(lfoGain);
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.6;
+  lfoGain.connect(gain.gain);
+  source.connect(bpf);
+  bpf.connect(gain);
+  gain.connect(masterGain);
+  lfo.start();
+  source.start();
+  return { nodes: [source, bpf, lfo, lfoGain, gain], stop: () => {
+    source.stop(); lfo.stop();
+    [source, bpf, lfo, lfoGain, gain].forEach(n => n.disconnect());
+  }};
+}
+
+function playHeartbeat() {
+  // Low-frequency thumps at ~70 BPM
+  const beatInterval = 60 / 70; // ~0.857s
+  const bufLen = Math.ceil(audioCtx.sampleRate * beatInterval);
+  const buffer = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  const sr = audioCtx.sampleRate;
+  for (let i = 0; i < bufLen; i++) {
+    const t = i / sr;
+    // Double thump: "lub-dub"
+    const beat1 = Math.sin(2 * Math.PI * 50 * t) * Math.exp(-t * 20);
+    const t2 = t - 0.15;
+    const beat2 = t2 > 0 ? Math.sin(2 * Math.PI * 40 * t2) * Math.exp(-t2 * 25) * 0.7 : 0;
+    data[i] = (beat1 + beat2) * 0.8;
+  }
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const lpf = audioCtx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.value = 150;
+  const gain = audioCtx.createGain();
+  gain.gain.value = 1.0;
+  source.connect(lpf);
+  lpf.connect(gain);
+  gain.connect(masterGain);
+  source.start();
+  return { nodes: [source, lpf, gain], stop: () => { source.stop(); [source, lpf, gain].forEach(n => n.disconnect()); } };
+}
+
+function playShush() {
+  // Noise with rhythmic volume envelope (like "shhhh... shhhh...")
+  const buffer = createNoiseBuffer(4);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const bpf = audioCtx.createBiquadFilter();
+  bpf.type = 'bandpass';
+  bpf.frequency.value = 4000;
+  bpf.Q.value = 0.3;
+  // Rhythmic modulation (~1 shush per second)
+  const lfo = audioCtx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.value = 0.8;
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.value = 0.4;
+  lfo.connect(lfoGain);
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.4;
+  lfoGain.connect(gain.gain);
+  source.connect(bpf);
+  bpf.connect(gain);
+  gain.connect(masterGain);
+  lfo.start();
+  source.start();
+  return { nodes: [source, bpf, lfo, lfoGain, gain], stop: () => {
+    source.stop(); lfo.stop();
+    [source, bpf, lfo, lfoGain, gain].forEach(n => n.disconnect());
+  }};
+}
+
+function playOcean() {
+  // Slow, deep filtered noise waves
+  const buffer = createNoiseBuffer(4);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const lpf = audioCtx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.value = 800;
+  lpf.Q.value = 1;
+  // Very slow wave LFO
+  const lfo = audioCtx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.value = 0.1;
+  const lfoGain = audioCtx.createGain();
+  lfoGain.gain.value = 0.35;
+  lfo.connect(lfoGain);
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.35;
+  lfoGain.connect(gain.gain);
+  // Modulate filter frequency too for "wooosh" effect
+  const lfo2 = audioCtx.createOscillator();
+  lfo2.type = 'sine';
+  lfo2.frequency.value = 0.1;
+  const lfo2Gain = audioCtx.createGain();
+  lfo2Gain.gain.value = 400;
+  lfo2.connect(lfo2Gain);
+  lfo2Gain.connect(lpf.frequency);
+  source.connect(lpf);
+  lpf.connect(gain);
+  gain.connect(masterGain);
+  lfo.start();
+  lfo2.start();
+  source.start();
+  return { nodes: [source, lpf, lfo, lfoGain, lfo2, lfo2Gain, gain], stop: () => {
+    source.stop(); lfo.stop(); lfo2.stop();
+    [source, lpf, lfo, lfoGain, lfo2, lfo2Gain, gain].forEach(n => n.disconnect());
+  }};
+}
+
+const soundMap = {
+  white: { fn: playWhiteNoise, name: 'White Noise' },
+  pink: { fn: playPinkNoise, name: 'Pink Noise' },
+  rain: { fn: playRain, name: 'Rain' },
+  heartbeat: { fn: playHeartbeat, name: 'Heartbeat' },
+  shush: { fn: playShush, name: 'Shushing' },
+  ocean: { fn: playOcean, name: 'Ocean Waves' },
+};
+
+// ===================== PLAYBACK CONTROL =====================
+let activeHandle = null;
+const nowPlaying = document.getElementById('nowPlaying');
+
+function stopSound() {
+  if (activeHandle) {
+    activeHandle.stop();
+    activeHandle = null;
+  }
+  currentSound = null;
+  document.querySelectorAll('.sound-card').forEach(c => c.classList.remove('playing'));
+  nowPlaying.textContent = 'Tap a sound to play';
+  nowPlaying.classList.remove('active');
+  releaseWakeLock();
+  stopSleepTimer();
+}
+
+function playSound(key) {
+  initAudio();
+  resumeAudio();
+  if (currentSound === key) { stopSound(); return; }
+  if (activeHandle) activeHandle.stop();
+  document.querySelectorAll('.sound-card').forEach(c => c.classList.remove('playing'));
+  const card = document.querySelector(`[data-sound="${key}"]`);
+  card.classList.add('playing');
+  activeHandle = soundMap[key].fn();
+  currentSound = key;
+  nowPlaying.innerHTML = `Playing: <strong>${soundMap[key].name}</strong> — tap to stop`;
+  nowPlaying.classList.add('active');
+  requestWakeLock();
+  // Start timer if one is set
+  const activeTimer = document.querySelector('.timer-btn.active');
+  const mins = parseInt(activeTimer.dataset.mins);
+  if (mins > 0) startSleepTimer(mins);
+}
+
+document.querySelectorAll('.sound-card').forEach(card => {
+  card.addEventListener('click', () => playSound(card.dataset.sound));
+});
+
+// ===================== VOLUME =====================
+const volumeSlider = document.getElementById('volume');
+volumeSlider.addEventListener('input', () => {
+  if (masterGain) masterGain.gain.value = volumeSlider.value / 100;
+});
+
+// ===================== SLEEP TIMER =====================
+let sleepTimerId = null;
+let sleepRemaining = 0;
+const timerDisplay = document.getElementById('timerDisplay');
+
+document.querySelectorAll('.timer-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.timer-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    stopSleepTimer();
+    const mins = parseInt(btn.dataset.mins);
+    if (mins > 0 && currentSound) startSleepTimer(mins);
+  });
+});
+
+function startSleepTimer(mins) {
+  stopSleepTimer();
+  sleepRemaining = mins * 60;
+  timerDisplay.classList.add('running');
+  updateTimerDisplay();
+  sleepTimerId = setInterval(() => {
+    sleepRemaining--;
+    updateTimerDisplay();
+    // Fade out in last 10 seconds
+    if (sleepRemaining <= 10 && sleepRemaining > 0 && masterGain) {
+      masterGain.gain.value = (sleepRemaining / 10) * (volumeSlider.value / 100);
+    }
+    if (sleepRemaining <= 0) {
+      stopSound();
+      timerDisplay.textContent = 'Timer ended — sweet dreams 💤';
+      // Restore volume
+      if (masterGain) masterGain.gain.value = volumeSlider.value / 100;
+    }
+  }, 1000);
+}
+
+function stopSleepTimer() {
+  if (sleepTimerId) { clearInterval(sleepTimerId); sleepTimerId = null; }
+  sleepRemaining = 0;
+  timerDisplay.textContent = '';
+  timerDisplay.classList.remove('running');
+  // Restore volume after fade
+  if (masterGain) masterGain.gain.value = volumeSlider.value / 100;
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(sleepRemaining / 60);
+  const s = String(sleepRemaining % 60).padStart(2, '0');
+  timerDisplay.textContent = `Auto-stop in ${m}:${s}`;
+}
+
+// ===================== WAKE LOCK =====================
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+  } catch (e) {}
+}
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentSound) requestWakeLock();
+});
+
+// ===================== SERVICE WORKER =====================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
