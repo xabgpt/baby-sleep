@@ -1,7 +1,7 @@
 {
-  "name": "Baby Sleep Sounds",
-  "short_name": "BabySleep",
-  "description": "Soothing sounds and sleep tips for your newborn",
+  "name": "Munachimso's Sleep Sounds",
+  "short_name": "MunaSleep",
+  "description": "Soothing sounds and sleep tips for Munachimso",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0a0a1a",
